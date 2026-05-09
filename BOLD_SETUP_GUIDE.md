@@ -12,7 +12,6 @@ La integración con **Bold Payment Gateway** ha sido completada exitosamente. Aq
 
 #### Backend (`backend/.env`)
 ```env
-BOLD_API_KEY=FY2mjk1CdzOCae6Osjx3vY8z_4RXYWe9S9meIhhhyBKQ
 BOLD_SECRET_KEY=9YHumhBDDDYu8RHppnQAEw
 BOLD_SANDBOX=true
 FRONTEND_URL=http://localhost:5173
@@ -22,7 +21,6 @@ FRONTEND_URL=http://localhost:5173
 ```env
 VITE_API_URL=http://localhost:4000/api
 VITE_BOLD_PUBLIC_KEY=FY2mjk1CdzOCae6Osjx3vY8z_4RXYWe9S9meIhhhyBKQ
-VITE_BOLD_SECRET_KEY=9YHumhBDDDYu8RHppnQAEw
 ```
 
 ---
@@ -156,7 +154,7 @@ Ambiente:                         Sandbox (Desarrollo)
 - Recarga la página y vuelve a intentar
 
 ### "Error procesando el pago"
-- Verifica que `BOLD_API_KEY` esté configurado en `backend/.env`
+- Verifica que `BOLD_SECRET_KEY` esté configurado en `backend/.env`
 - Verifica que el servidor backend esté corriendo
 - Revisa los logs del backend para más detalles
 
@@ -177,7 +175,6 @@ Ambiente:                         Sandbox (Desarrollo)
 1. **Cambiar a Producción en Bold:**
    ```env
    BOLD_SANDBOX=false
-   BOLD_API_KEY=<tu_production_key>
    BOLD_SECRET_KEY=<tu_production_secret>
    ```
 

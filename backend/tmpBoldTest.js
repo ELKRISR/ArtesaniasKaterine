@@ -1,8 +1,6 @@
 require('dotenv').config({ path: './.env' });
 const axios = require('axios');
-const base = process.env.BOLD_SANDBOX === 'true'
-  ? 'https://api.sandbox.payments.bold.co/v1/payment_intent'
-  : 'https://api.payments.bold.co/v1/payment_intent';
+const base = 'https://api.bold.com/v1/payment_intent';
 
 console.log('BOLD URL', base);
 
@@ -27,7 +25,7 @@ axios.post(
   },
   {
     headers: {
-      Authorization: 'Bearer ' + process.env.BOLD_API_KEY,
+      Authorization: 'Bearer ' + process.env.BOLD_SECRET_KEY,
       'Content-Type': 'application/json'
     }
   }

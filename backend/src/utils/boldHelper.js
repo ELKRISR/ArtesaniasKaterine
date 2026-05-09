@@ -11,7 +11,10 @@ const axios = require('axios');
 const crypto = require('crypto');
 
 /**
- * URL base de la API de Bold (Sandbox y Producción)
+ * URL base de la API de Bold.
+ *
+ * Bold usa el mismo host para sandbox y producción. El modo sandbox
+ * se controla con la propiedad `test: true` en el payload.
  */
 const BOLD_BASE_URL = process.env.BOLD_BASE_URL || 'https://api.bold.com';
 
@@ -20,12 +23,12 @@ console.log(`Bold base URL: ${BOLD_BASE_URL} (sandbox=${process.env.BOLD_SANDBOX
 /**
  * Crea una intención de pago en Bold
  * @param {object} paymentIntent - Datos de la intención de pago
- * @param {string} apiKey - Llave de identidad de Bold
+ * @param {string} secretKey - Llave secreta de Bold
  * @returns {Promise<object>} Respuesta de Bold con payment_intent_reference
  */
-const createPaymentIntent = async (paymentIntent, apiKey) => {
-  if (!apiKey) {
-    throw new Error('BOLD_API_KEY no está configurada. Revisa backend/.env');
+const createPaymentIntent = async (paymentIntent, secretKey) => {
+  if (!secretKey) {
+    throw new Error('BOLD_SECRET_KEY no está configurada. Revisa backend/.env');
   }
 
   try {
@@ -34,7 +37,7 @@ const createPaymentIntent = async (paymentIntent, apiKey) => {
       paymentIntent,
       {
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${secretKey}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'User-Agent': 'Artesanias-Bold-Integration/1.0'
@@ -55,12 +58,12 @@ const createPaymentIntent = async (paymentIntent, apiKey) => {
 /**
  * Procesa un pago en Bold usando el token del SDK
  * @param {object} paymentAttempt - Datos del intento de pago con token
- * @param {string} apiKey - Llave de identidad de Bold
+ * @param {string} secretKey - Llave secreta de Bold
  * @returns {Promise<object>} Respuesta de Bold
  */
-const processPayment = async (paymentAttempt, apiKey) => {
-  if (!apiKey) {
-    throw new Error('BOLD_API_KEY no está configurada. Revisa backend/.env');
+const processPayment = async (paymentAttempt, secretKey) => {
+  if (!secretKey) {
+    throw new Error('BOLD_SECRET_KEY no está configurada. Revisa backend/.env');
   }
 
   try {
@@ -69,7 +72,7 @@ const processPayment = async (paymentAttempt, apiKey) => {
       paymentAttempt,
       {
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${secretKey}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'User-Agent': 'Artesanias-Bold-Integration/1.0'
@@ -90,12 +93,12 @@ const processPayment = async (paymentAttempt, apiKey) => {
 /**
  * Consulta el estado de un pago en Bold
  * @param {string} paymentIntentReference - ID de referencia del payment intent
- * @param {string} apiKey - Llave de identidad de Bold
+ * @param {string} secretKey - Llave secreta de Bold
  * @returns {Promise<object>} Respuesta de Bold con estado del pago
  */
-const getPaymentStatus = async (paymentIntentReference, apiKey) => {
-  if (!apiKey) {
-    throw new Error('BOLD_API_KEY no está configurada. Revisa backend/.env');
+const getPaymentStatus = async (paymentIntentReference, secretKey) => {
+  if (!secretKey) {
+    throw new Error('BOLD_SECRET_KEY no está configurada. Revisa backend/.env');
   }
 
   try {
@@ -103,7 +106,7 @@ const getPaymentStatus = async (paymentIntentReference, apiKey) => {
       `${BOLD_BASE_URL}/v1/payment_intent/${paymentIntentReference}`,
       {
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${secretKey}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         }

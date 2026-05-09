@@ -362,6 +362,7 @@ router.patch(
 ========================= */
 router.get(
   "/bold-payment-intent/:referenceId",
+  verifyToken,
   obtenerBoldPaymentIntent
 );
 
@@ -379,6 +380,7 @@ router.post(
 ========================= */
 router.get(
   "/bold-payment-status/:referenceId",
+  verifyToken,
   obtenerEstadoPagoBold
 );
 

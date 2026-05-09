@@ -10,8 +10,8 @@ Esta guía contiene la integración **completa y profesional** de Bold como pasa
 
 1. **Cuenta Bold**: https://dashboard.bold.co
 2. **API Keys de Bold**:
-   - `BOLD_API_KEY`: Tu clave de API
-   - `BOLD_SECRET_KEY`: Tu clave secreta
+   - `BOLD_SECRET_KEY`: Tu clave secreta (usada en backend)
+   - `VITE_BOLD_PUBLIC_KEY`: Tu clave pública/publishable key (usada en frontend)
    - URLs de ambiente (sandbox vs producción)
 
 3. **Base de datos actualizada**: Ejecutar migraciones SQL
@@ -24,7 +24,6 @@ Esta guía contiene la integración **completa y profesional** de Bold como pasa
 
 ```env
 # ============== BOLD PAYMENT ==============
-BOLD_API_KEY=tu_api_key_aqui
 BOLD_SECRET_KEY=tu_secret_key_aqui
 BOLD_SANDBOX=false  # true para sandbox, false para producción
 
@@ -140,22 +139,8 @@ const crearPedidoBoldSession = async (req, res) => {
 
 **API Call a Bold:**
 ```
-POST https://api.payments.bold.co/v1/payment_intent
-Authorization: Bearer {BOLD_API_KEY}
-Content-Type: application/json
-
-{
-  "reference": "pedido-123-1715000000000",
-  "amount_in_cents": 50000,  // 500.00 COP
-  "currency": "COP",
-  "description": "Pedido #123 - Artesanías",
-  "customer": {
-    "name": "Juan Pérez",
-    "email": "juan@example.com",
-    "phone": "3001234567"
-  },
-  "webhook_url": "https://api.tudominio.com/api/webhook/bold"
-}
+POST https://api.bold.com/v1/payment_intent
+   Authorization: Bearer {BOLD_SECRET_KEY}
 ```
 
 **Respuesta:**
@@ -205,21 +190,15 @@ const procesarPagoBold = async (req, res) => {
       type: "CARD",
       card: { token: token }  // Token del SDK
     }
-  }, BOLD_API_KEY);
-  
-  // Valida respuesta
-  if (paymentResponse.status === 'APPROVED') {
-    // Actualiza pedido a "pagado"
-    // Guarda transacción
-    // Envía confirmación
+   }, BOLD_SECRET_KEY);
   }
 };
 ```
 
 **API Call a Bold:**
 ```
-POST https://api.payments.bold.co/v1/payment
-Authorization: Bearer {BOLD_API_KEY}
+POST https://api.bold.com/v1/payment
+Authorization: Bearer {BOLD_SECRET_KEY}
 Content-Type: application/json
 
 {

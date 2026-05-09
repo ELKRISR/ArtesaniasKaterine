@@ -374,7 +374,7 @@ const crearPedidoBoldSession = async (req, res) => {
 
       const boldResponse = await createPaymentIntent(
         paymentIntentPayload,
-        process.env.BOLD_API_KEY
+        process.env.BOLD_SECRET_KEY
       );
 
       const paymentIntentReference =
@@ -607,6 +607,8 @@ const cambiarEstadoPedido = async (req, res) => {
 ========================= */
 const obtenerBoldPaymentIntent = async (req, res) => {
   const { referenceId } = req.params;
+  const usuarioId = req.usuario?.id;
+  const rol = req.usuario?.rol;
 
   if (!referenceId) {
     return errorResponse(res, "Reference ID requerido", 400);
@@ -630,6 +632,11 @@ const obtenerBoldPaymentIntent = async (req, res) => {
     }
 
     const pedidoData = pedido[0];
+
+    if (rol !== 'admin' && pedidoData.usuario_id !== usuarioId) {
+      return errorResponse(res, "No autorizado", 403);
+    }
+
     const totalAmount = Math.round(pedidoData.total * 100); // Convertir a centavos para Bold
 
     return successResponse(res, {
@@ -733,7 +740,7 @@ const procesarPagoBold = async (req, res) => {
     try {
       boldPaymentResponse = await processPayment(
         paymentAttempt,
-        process.env.BOLD_API_KEY
+        process.env.BOLD_SECRET_KEY
       );
     } catch (boldError) {
       console.error('Error en API de Bold:', boldError.response?.data);
@@ -835,6 +842,8 @@ const procesarPagoBold = async (req, res) => {
 ========================= */
 const obtenerEstadoPagoBold = async (req, res) => {
   const { referenceId } = req.params;
+  const usuarioId = req.usuario?.id;
+  const rol = req.usuario?.rol;
 
   if (!referenceId) {
     return errorResponse(res, "Reference ID requerido", 400);
@@ -858,6 +867,10 @@ const obtenerEstadoPagoBold = async (req, res) => {
     }
 
     const pedidoData = pedido[0];
+
+    if (rol !== 'admin' && pedidoData.usuario_id !== usuarioId) {
+      return errorResponse(res, "No autorizado", 403);
+    }
 
     return successResponse(res, {
       referenceId,

@@ -38,9 +38,6 @@ export default defineConfig({
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-              },
-              cacheKeyWillBeUsed: async ({ request }) => {
-                return `${request.url}?${Date.now()}`;
               }
             }
           }
@@ -49,73 +46,36 @@ export default defineConfig({
     })
   ],
 
-  // ============================================================
-  // 🔒 CONFIGURACIÓN DE SEGURIDAD DEL SERVIDOR DE DESARROLLO
-  // ============================================================
+  // Configuración para desarrollo local (no afecta a Vercel)
   server: {
-    // ⚠️ CRÍTICO: host: 'localhost' previene exposición en red
-    // NUNCA cambiar a '0.0.0.0' o true en entornos compartidos
     host: 'localhost',
-    
-    // Puerto del servidor
     port: 5173,
-
-    // ============================================================
-    // 🔒 SEGURIDAD DEL FILESYSTEM - Protege archivos sensibles
-    // ============================================================
     fs: {
-      // Activa restricciones estrictas - previene acceso fuera de la raíz
       strict: true,
-      
-      // Deniega explícitamente archivos sensibles
       deny: [
-        // Variables de entorno
         '.env',
         '.env.*',
         '.env.local',
-        '.env.development',
-        '.env.production',
-        
-        // Certificados y claves
         '*.pem',
         '*.crt',
         '*.key',
-        '*.csr',
-        
-        // Archivos de base de datos
         '*.db',
         '*.sqlite',
-        '*.sql',
-        
-        // Archivos de configuración sensibles
-        'package-lock.json',
-        'yarn.lock',
-        
-        // Archivos de sistema
-        '.DS_Store',
-        'Thumbs.db',
-        
-        // Archivos de respaldo
-        '*.backup',
-        '*.old',
-        '*.swp',
       ],
     },
   },
 
-  // ============================================================
-  // 🔒 CONFIGURACIÓN DE BUILD (PRODUCCIÓN)
-  // ============================================================
   build: {
-    // ⚠️ CRÍTICO: sourcemap: false en producción
-    // Los sourcemaps exponen tu código original completo
-    // false = no generar sourcemaps en producción
     sourcemap: false,
-    
-    // Minificar código (mejora rendimiento)
     minify: 'esbuild',
-    
-    // Limpiar directorio de salida antes de build
     emptyOutDir: true,
+    // Configuración específica para Vercel
+    outDir: 'dist',
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
+    }
   },
 })
