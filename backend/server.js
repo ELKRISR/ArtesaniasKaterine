@@ -20,7 +20,7 @@ if (process.env.FRONTEND_URL) {
 }
 
 if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
-  console.warn('[Socket.IO CORS] ALLOWED_ORIGINS no definido en producción; permitiendo todos los orígenes temporalmente. Configura ALLOWED_ORIGINS en el despliegue para mayor seguridad.');
+  console.error('[Socket.IO CORS] ERROR: ALLOWED_ORIGINS no está definido en producción. Ningún origen será permitido.');
 }
 
 const server = http.createServer(app);
@@ -34,7 +34,7 @@ const io = new Server(server, {
         return callback(null, true);
       }
 
-      if (allowedOrigins.length === 0 || allowedOrigins.indexOf(origin) !== -1) {
+      if (allowedOrigins.indexOf(origin) !== -1) {
         return callback(null, true);
       }
 

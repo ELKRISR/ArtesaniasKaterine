@@ -57,8 +57,12 @@ import axios from 'axios';
  * - `withCredentials`: true — permite enviar/recibir cookies cross-origin
  *   (necesario para la cookie httpOnly del refresh token).
  */
+const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const apiUrl = rawApiUrl.replace(/\/+$/, '');
+const normalizedApiUrl = apiUrl.endsWith('/api') ? apiUrl : `${apiUrl}/api`;
+
 const api = axios.create({
-  baseURL:         import.meta.env.VITE_API_URL || 'http://localhost:4000/api',
+  baseURL:         normalizedApiUrl,
   timeout:         10_000,
   withCredentials: true,
   // 🔒 Seguridad: No seguir redirecciones automáticas
