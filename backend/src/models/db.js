@@ -63,6 +63,7 @@ const pool = mysql.createPool({
   user:     process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
+  port:     4000, // Puerto de TiDB Cloud
 
   // Gestión del pool
   waitForConnections: true,
@@ -71,6 +72,12 @@ const pool = mysql.createPool({
 
   // Fechas siempre en UTC — evita desfases horarios
   timezone: '+00:00',
+
+  // SSL para producción (TiDB Cloud)
+  ssl: {
+    require: true,
+    rejectUnauthorized: true  // Seguro para producción
+  }
 });
 
 module.exports = pool;

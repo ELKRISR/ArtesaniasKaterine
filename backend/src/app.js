@@ -386,8 +386,8 @@ io.on('connection', (socket) => {
 // Hacer io disponible globalmente para los controllers
 global.io = io;
 
-// Solo iniciar servidor si este archivo es ejecutado directamente
-if (require.main === module) {
+// Solo para desarrollo local:
+if (process.env.NODE_ENV !== 'production') {
   server.listen(PORT, () => {
     console.log("=======================================");
     console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
