@@ -19,8 +19,10 @@ if (process.env.FRONTEND_URL) {
   }
 }
 
+const isVercelOrigin = (origin) => typeof origin === 'string' && /^https:\/\/[\w-]+\.vercel\.app$/i.test(origin);
+
 if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
-  console.error('[Socket.IO CORS] ERROR: ALLOWED_ORIGINS no está definido en producción. Ningún origen será permitido.');
+  console.warn('[Socket.IO CORS] ADVERTENCIA: ALLOWED_ORIGINS no está definido en producción. Solo se permitirán orígenes Vercel y FRONTEND_URL si están configurados.');
 }
 
 const server = http.createServer(app);
@@ -34,7 +36,8 @@ const io = new Server(server, {
         return callback(null, true);
       }
 
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      const isAllowed = allowedOrigins.indexOf(origin) !== -1 || isVercelOrigin(origin);
+      if (isAllowed) {
         return callback(null, true);
       }
 
