@@ -6,9 +6,22 @@ const app = require('./src/app');
 
 const PORT = process.env.PORT || 4000;
 
-const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
-  : ['http://localhost:5173', 'http://localhost:3000'];
+const rawAllowedOrigins = process.env.ALLOWED_ORIGINS || '';
+const allowedOrigins = rawAllowedOrigins
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+if (process.env.FRONTEND_URL) {
+  const frontendUrl = process.env.FRONTEND_URL.trim();
+  if (frontendUrl && allowedOrigins.indexOf(frontendUrl) === -1) {
+    allowedOrigins.push(frontendUrl);
+  }
+}
+
+if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
+  console.warn('[Socket.IO CORS] ALLOWED_ORIGINS no definido en producción; permitiendo todos los orígenes temporalmente. Configura ALLOWED_ORIGINS en el despliegue para mayor seguridad.');
+}
 
 const server = http.createServer(app);
 
@@ -18,14 +31,10 @@ const io = new Server(server, {
       if (!origin) return callback(null, true);
 
       if (process.env.NODE_ENV !== 'production') {
-        if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost')) {
-          return callback(null, true);
-        }
-        console.warn(`[Socket.IO CORS] Origen no estándar en desarrollo: ${origin}`);
         return callback(null, true);
       }
 
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      if (allowedOrigins.length === 0 || allowedOrigins.indexOf(origin) !== -1) {
         return callback(null, true);
       }
 

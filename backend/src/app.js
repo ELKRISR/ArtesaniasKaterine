@@ -118,9 +118,22 @@ if (process.env.NODE_ENV === 'production') {
  * En desarrollo: permite localhost:5173
  * En producción: solo dominios específicos en lista blanca
  */
-const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
-  : ['http://localhost:5173', 'http://localhost:3000'];
+const rawAllowedOrigins = process.env.ALLOWED_ORIGINS || '';
+const allowedOrigins = rawAllowedOrigins
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+if (process.env.FRONTEND_URL) {
+  const frontendUrl = process.env.FRONTEND_URL.trim();
+  if (frontendUrl && allowedOrigins.indexOf(frontendUrl) === -1) {
+    allowedOrigins.push(frontendUrl);
+  }
+}
+
+if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
+  console.warn('[CORS] ALLOWED_ORIGINS no definido en producción; permitiendo todos los orígenes temporalmente. Configura ALLOWED_ORIGINS en el despliegue para mayor seguridad.');
+}
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -129,20 +142,16 @@ app.use(cors({
     
     // En desarrollo, permitir más flexibilidad
     if (process.env.NODE_ENV !== 'production') {
-      if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost')) {
-        return callback(null, true);
-      }
-      console.warn(`[CORS] Origen no estándar en desarrollo: ${origin}`);
       return callback(null, true);
     }
-    
+
     // En producción: validación estricta
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.warn(`[CORS] 🔴 Bloqueado intento de acceso desde: ${origin}`);
-      callback(new Error('No permitido por política CORS'));
+    if (allowedOrigins.length === 0 || allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
     }
+
+    console.warn(`[CORS] 🔴 Bloqueado intento de acceso desde: ${origin}`);
+    callback(new Error('No permitido por política CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
