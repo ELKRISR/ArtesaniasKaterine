@@ -116,7 +116,7 @@ if (process.env.NODE_ENV === 'production') {
  * 🔒 CORS CONFIGURACIÓN SEGURA
  * ===================================================
  * En desarrollo: permite localhost:5173
- * En producción: solo dominios específicos en lista blanca
+ * En producción: permite todos los *.vercel.app + dominios en ALLOWED_ORIGINS
  */
 const rawAllowedOrigins = process.env.ALLOWED_ORIGINS || '';
 const allowedOrigins = rawAllowedOrigins
@@ -124,36 +124,25 @@ const allowedOrigins = rawAllowedOrigins
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-if (process.env.FRONTEND_URL) {
-  const frontendUrl = process.env.FRONTEND_URL.trim();
-  if (frontendUrl && allowedOrigins.indexOf(frontendUrl) === -1) {
-    allowedOrigins.push(frontendUrl);
-  }
-}
-
-const isVercelOrigin = (origin) => typeof origin === 'string' && /^https:\/\/[\w-]+\.vercel\.app$/i.test(origin);
-
-if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
-  console.warn('[CORS] ADVERTENCIA: ALLOWED_ORIGINS no está definido en producción. Solo se permitirán orígenes Vercel y FRONTEND_URL si están configurados.');
-}
-
 app.use(cors({
   origin: function (origin, callback) {
-    // Permitir requests sin origin (como Postman, apps móviles)
     if (!origin) return callback(null, true);
     
-    // En desarrollo, permitir más flexibilidad
+    // En desarrollo: permitir TODO
     if (process.env.NODE_ENV !== 'production') {
       return callback(null, true);
     }
 
-    const isAllowed = allowedOrigins.indexOf(origin) !== -1 || isVercelOrigin(origin);
+    // En producción: permitir Vercel + dominios configurados
+    const isVercelOrigin = /vercel\.app$/.test(origin);
+    const isAllowed = isVercelOrigin || allowedOrigins.indexOf(origin) !== -1;
+    
     if (isAllowed) {
       return callback(null, true);
     }
 
-    console.warn(`[CORS] 🔴 Bloqueado intento de acceso desde: ${origin}`);
-    callback(new Error('No permitido por política CORS'));
+    console.warn(`[CORS] Bloqueado: ${origin}`);
+    callback(new Error('CORS bloqueado'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

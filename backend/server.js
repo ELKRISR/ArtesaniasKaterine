@@ -12,19 +12,6 @@ const allowedOrigins = rawAllowedOrigins
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-if (process.env.FRONTEND_URL) {
-  const frontendUrl = process.env.FRONTEND_URL.trim();
-  if (frontendUrl && allowedOrigins.indexOf(frontendUrl) === -1) {
-    allowedOrigins.push(frontendUrl);
-  }
-}
-
-const isVercelOrigin = (origin) => typeof origin === 'string' && /^https:\/\/[\w-]+\.vercel\.app$/i.test(origin);
-
-if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
-  console.warn('[Socket.IO CORS] ADVERTENCIA: ALLOWED_ORIGINS no está definido en producción. Solo se permitirán orígenes Vercel y FRONTEND_URL si están configurados.');
-}
-
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -36,13 +23,15 @@ const io = new Server(server, {
         return callback(null, true);
       }
 
-      const isAllowed = allowedOrigins.indexOf(origin) !== -1 || isVercelOrigin(origin);
+      const isVercelOrigin = /vercel\.app$/.test(origin);
+      const isAllowed = isVercelOrigin || allowedOrigins.indexOf(origin) !== -1;
+      
       if (isAllowed) {
         return callback(null, true);
       }
 
-      console.warn(`[Socket.IO CORS] 🔴 Bloqueado intento de acceso desde: ${origin}`);
-      callback(new Error('No permitido por política CORS'));
+      console.warn(`[Socket.IO CORS] Bloqueado: ${origin}`);
+      callback(new Error('CORS bloqueado'));
     },
     credentials: true,
     methods: ['GET', 'POST']
