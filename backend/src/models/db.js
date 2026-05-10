@@ -58,12 +58,22 @@ require('dotenv').config();
  *
  * @type {import('mysql2/promise').Pool}
  */
-const pool = mysql.createPool({
+
+// Configurar puerto y SSL según el entorno
+const dbPort = process.env.NODE_ENV === 'production' 
+  ? (process.env.DB_PORT || 4000) // TiDB Cloud puerto 4000 en producción
+  : (process.env.DB_PORT || 3306); // MySQL puerto 3306 en desarrollo
+
+const dbSslConfig = process.env.NODE_ENV === 'production'
+  ? { require: true, rejectUnauthorized: true }
+  : undefined; // Sin SSL en desarrollo
+
+const poolConfig = {
   host:     process.env.DB_HOST,
   user:     process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  port:     4000, // Puerto de TiDB Cloud
+  port:     dbPort,
 
   // Gestión del pool
   waitForConnections: true,
@@ -72,12 +82,13 @@ const pool = mysql.createPool({
 
   // Fechas siempre en UTC — evita desfases horarios
   timezone: '+00:00',
+};
 
-  // SSL para producción (TiDB Cloud)
-  ssl: {
-    require: true,
-    rejectUnauthorized: true  // Seguro para producción
-  }
-});
+// Agregar SSL solo si está configurado
+if (dbSslConfig) {
+  poolConfig.ssl = dbSslConfig;
+}
+
+const pool = mysql.createPool(poolConfig);
 
 module.exports = pool;

@@ -120,6 +120,14 @@ const submitContact = async (req, res) => {
   }
 
   try {
+    /* ── Fallback: intentar crear tabla si no existe ──────────────────── */
+    try {
+      await createTableIfNotExist();
+    } catch (tableErr) {
+      // Si falla, continuar de todas formas. Si la tabla existe, la query funcionará.
+      // Si no existe, el error lo capturará el INSERT.
+    }
+
     /* ── INSERT con valores sanitizados y placeholders ──────────────── */
     const [result] = await pool.query(
       'INSERT INTO contacto (nombre, email, mensaje) VALUES (?, ?, ?)',
@@ -158,6 +166,13 @@ const submitContact = async (req, res) => {
  */
 const listarContactos = async (req, res) => {
   try {
+    /* ── Fallback: intentar crear tabla si no existe ──────────────────── */
+    try {
+      await createTableIfNotExist();
+    } catch (tableErr) {
+      // Si falla, continuar de todas formas.
+    }
+
     const [rows] = await pool.query(
       `SELECT id, nombre, email, mensaje, creado_en
        FROM contacto
@@ -173,15 +188,40 @@ const listarContactos = async (req, res) => {
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
-   INICIALIZACIÓN — Crear tabla una sola vez al cargar el módulo
+   INICIALIZACIÓN — Crear tabla con reintentos inteligentes
    Se ejecuta automáticamente cuando Node.js importa este archivo.
-   Si falla (por ejemplo, MySQL no está listo aún), solo se registra
-   en consola — el servidor arranca de todas formas y reintentará
-   en la primera request gracias al IF NOT EXISTS.
+   Si falla (por ejemplo, MySQL no está listo aún), reintentará automáticamente.
+   El servidor arranca de todas formas gracias al IF NOT EXISTS.
 ════════════════════════════════════════════════════════════════════════ */
-createTableIfNotExist()
-  .then(() => console.log('[CONTACT] Tabla contacto verificada.'))
-  .catch((err) => console.warn('[CONTACT] No se pudo verificar la tabla contacto:', err.message));
+
+/**
+ * Intenta crear la tabla con reintentos exponenciales.
+ * Útil cuando en Render o producción la BD tarda en estar lista.
+ */
+const initializeTableWithRetry = async (maxRetries = 5, delay = 1000) => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await createTableIfNotExist();
+      console.log('[CONTACT] ✅ Tabla contacto verificada.');
+      return true;
+    } catch (err) {
+      console.warn(`[CONTACT] Intento ${attempt}/${maxRetries} fallido:`, err.message);
+      if (attempt < maxRetries) {
+        // Esperar con backoff exponencial: 1s, 2s, 4s, 8s, 16s
+        const waitTime = delay * Math.pow(2, attempt - 1);
+        console.log(`[CONTACT] Reintentando en ${waitTime}ms...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+    }
+  }
+  console.warn('[CONTACT] ⚠️ No se pudo crear la tabla tras reintentos. El servidor arrancará de todas formas.');
+  return false;
+};
+
+// Ejecutar reintentos sin bloquear el arranque del servidor
+initializeTableWithRetry().catch((err) => {
+  console.error('[CONTACT] Error crítico en reintentos:', err.message);
+});
 
 module.exports = {
   submitContact,
